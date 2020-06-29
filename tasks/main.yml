@@ -1,0 +1,46 @@
+- name: Install dependencies
+  yum:
+    state: present
+  vars:
+    packages:
+    - mdadm
+
+- name: Create directory path
+  file:
+    name: /opt/system-scripts/bin
+    owner: root
+    group: root
+    mode: 0700
+    recurse: yes
+    selevel: s0
+    serole: object_r
+    setype: bin_t
+    seuser: system_u
+    state: directory
+
+- name: Install shell script
+  template:
+    src: "{{ role_path }}/templates/local-nvme-autoconf.sh.j2"
+    dest: /opt/system-scripts/bin/local-nvme-autoconf.sh   
+    owner: root
+    group: root
+    mode: 0700
+    selevel: s0
+    serole: object_r
+    setype: bin_t
+    seuser: system_u
+
+- name: Install init script
+  copy:
+    src: "{{ role_path }}/files/local-nvme-autoconf.service"
+    dest: /lib/systemd/system/local-nvme-autoconf.service
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Enable service
+  systemd:
+    name: local-nvme-autoconf
+    daemon_reload: yes
+    enabled: yes
+

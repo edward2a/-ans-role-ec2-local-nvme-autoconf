@@ -1,0 +1,6 @@
+volume:
+  name: test-vol
+  mountpoint: /var/test-vol
+  post_mount_mkdir: ''
+  fs: xfs
+  fs_owner: ec2-user
