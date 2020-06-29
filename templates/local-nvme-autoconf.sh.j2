@@ -36,12 +36,12 @@ if ((${#disks[*]} > 1)); then
     READY_DEV=${MD_DEV}
 
     # Check if raid exists and is present or assmeble, else create
-    if (mdadm --misc --examine ${disks[0]} | grep -oPq "(^\s+Name : )\K${VOLUME_NAME}$") && [ ! -b /dev/md/${VOLUME_NAME} ]; then
-        [[ -b /dev/md/${VOLUME_NAME}_0 ]] && mdadm --stop /dev/md/${VOLUME_NAME}_0
+    if (mdadm --misc --examine ${disks[0]} | grep -oPq "(^\s+Name : )\K${VOLUME_NAME}$") && [ ! -b ${READY_DEV} ]; then
+        [[ -b ${READY_DEV}_0 ]] && mdadm --stop ${READY_DEV}_0
         updateMdConfig
         mdadm --assemble --scan
 
-    else
+    elif [ ! -b ${READY_DEV} ]; then
         mdadm --create --verbose ${MD_DEV} --level=0 --name=${VOLUME_NAME} --raid-devices=${#disks[*]} ${disks[*]}
         mkfs -t ${FS_TYPE} -L ${VOLUME_NAME} ${MD_DEV}
         updateMdConfig
