@@ -1,6 +1,5 @@
 # ans-role-ec2-local-nvme-autoconf
 Auto configuration of local NVMe drives in EC2 instances
-====
 
 ## Usage
 Add this role in your playbook to automatically setup and mount NVMe instance store on boot.<br />
@@ -24,11 +23,11 @@ You can configure your application's init script to depend on this via SystemD.
 
 |Key|Info|
 |:--|:---|
-|volume.name|Name for the file system label and device name if RAID (/dev/md/<volume.name>|
+|volume.name|Name for the file system label and device name if RAID (/dev/md/\<volume.name\>|
 |volume.mountpoint|Path to mount the volume (will be created if non-existent)|
 |volume.post_mount_mkdir|Directories to create in the volume after mounted|
 |volume.fs|File system to format the volume|
-|volume.fs_owner|File system owner user (chown <user>) for the volume and the created directories|
+|volume.fs_owner|File system owner user (chown \<user\>) for the volume and the created directories|
 
 ## What will this do?
 The installed components on this role will:
