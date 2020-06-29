@@ -1,0 +1,73 @@
+#!/bin/bash
+set -u
+
+# Script to configure AWS instance store NVMe drives as a single volume
+#
+# Configuration
+#
+# VOLUME_NAME       : Name for the MD device and the file system label
+# MOUNTPOINT        : Absolute file system location to mount this volume
+# POSTMOUNT_DIRS    : Directories to create in the target volume after mount (comma separted)
+# FS_TYPE           : Which filesystem to format the volume
+# FS_OWNER          : Owner permission for the filesystem (recursive)
+
+VOLUME_NAME={{ volume.name }}
+MOUNTPOINT={{ volume.mountpoint }}
+POSTMOUNT_DIRS='{{ volume.post_mount_mkdir }}'
+FS_TYPE={{ volume.fs }}
+FS_OWNER={{ volume.fs_owner }}
+
+MD_DEV=/dev/md/${VOLUME_NAME}
+
+
+function updateMdConfig(){
+	UUID=$(mdadm --misc --examine ${disks[0]} | grep -oP "(^\s+Array UUID : )\K[a-z0-9:]{35}$")
+	echo "ARRAY ${MD_DEV} UUID=${UUID}" > /etc/mdadm.conf
+}
+
+
+# MAIN
+
+# Get all local nvme disks
+disks=($(nvme list | grep 'Instance Storage'| awk '{ print $1 }'))
+
+# Multi-disk setup
+if ((${#disks[*]} > 1)); then
+	READY_DEV=${MD_DEV}
+
+	# Check if raid exists and is present or assmeble, else create
+	if (mdadm --misc --examine ${disks[0]} | grep -oPq "(^\s+Name : )\K${VOLUME_NAME}$") && [ ! -b /dev/md/${VOLUME_NAME} ]; then
+        [[ -b /dev/md/${VOLUME_NAME}_0 ]] && mdadm --stop /dev/md/${VOLUME_NAME}_0
+        updateMdConfig
+		mdadm --assemble --scan
+
+	else
+		mdadm --create --verbose ${MD_DEV} --level=0 --name=${VOLUME_NAME} --raid-devices=${#disks[*]} ${disks[*]}
+		mkfs -t ${FS_TYPE} -L ${VOLUME_NAME} ${MD_DEV}
+        updateMdConfig
+    fi
+
+# Single disk setup
+else
+	READY_DEV=${disks}
+	blkid "${READY_DEV}" | grep -q xfs || mkfs -t ${FS_TYPE} -L ${VOLUME_NAME} ${disks}
+
+fi
+
+
+# Create mount point, mount and apply FS access
+[ -d "${MOUNTPOINT}" ] || { mkdir -p "${MOUNTPOINT}"; chmod 400 "${MOUNTPOINT}"; }
+if ! grep -q "${MOUNTPOINT}" /etc/mtab; then
+    mount -o defaults ${READY_DEV} "${MOUNTPOINT}" && \
+    [ stat "${MOUNTPOINT}" --format %U != "${FS_OWNER}" ] || chown ${FS_OWNER} "${MOUNTPOINT}"
+fi
+
+# Create directories in the volume and apply access
+IFS=,
+for d in ${POSTMOUNT_DIRS}; do
+	if [ ! -d "${MOUNTPOINT}"/"${d}" ]; then
+        mkdir "${MOUNTPOINT}"/"${d}"
+        chown ${FS_OWNER} "${MOUNTPOINT}"/"${d}"
+    fi
+done
+
