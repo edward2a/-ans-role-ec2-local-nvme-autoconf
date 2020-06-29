@@ -62,7 +62,10 @@ fi
 [ -d "${MOUNTPOINT}" ] || { mkdir -p "${MOUNTPOINT}"; chmod 400 "${MOUNTPOINT}"; }
 if ! grep -q "${MOUNTPOINT}" /etc/mtab; then
     mount -o defaults ${READY_DEV} "${MOUNTPOINT}" && \
-    { [[ "$(stat "${MOUNTPOINT}" --format %U)" == "${FS_OWNER}" ]] || chown ${FS_OWNER} "${MOUNTPOINT}"; }
+        if ! [[ "$(stat "${MOUNTPOINT}" --format %U)" == "${FS_OWNER}" ]]; then
+            chown ${FS_OWNER} "${MOUNTPOINT}"
+            chmod 750 "${MOUNTPOINT}"
+        fi
 fi
 
 # Create directories in the volume and apply access
@@ -71,6 +74,7 @@ for d in ${POSTMOUNT_DIRS}; do
     if [ ! -d "${MOUNTPOINT}"/"${d}" ]; then
         mkdir "${MOUNTPOINT}"/"${d}"
         chown ${FS_OWNER} "${MOUNTPOINT}"/"${d}"
+        chmod 750 "${MOUNTPOINT}"/"${d}"
     fi
 done
 
