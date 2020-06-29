@@ -28,6 +28,9 @@ function updateMdConfig(){
 
 # MAIN
 
+# Root only
+[ "$(id -u)" == 0 ] || exit 1
+
 # Get all local nvme disks
 disks=($(nvme list | grep 'Instance Storage'| awk '{ print $1 }'))
 
