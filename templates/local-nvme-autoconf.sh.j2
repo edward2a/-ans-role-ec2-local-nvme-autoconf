@@ -21,8 +21,8 @@ MD_DEV=/dev/md/${VOLUME_NAME}
 
 
 function updateMdConfig(){
-	UUID=$(mdadm --misc --examine ${disks[0]} | grep -oP "(^\s+Array UUID : )\K[a-z0-9:]{35}$")
-	echo "ARRAY ${MD_DEV} UUID=${UUID}" > /etc/mdadm.conf
+    UUID=$(mdadm --misc --examine ${disks[0]} | grep -oP "(^\s+Array UUID : )\K[a-z0-9:]{35}$")
+    echo "ARRAY ${MD_DEV} UUID=${UUID}" > /etc/mdadm.conf
 }
 
 
@@ -33,24 +33,24 @@ disks=($(nvme list | grep 'Instance Storage'| awk '{ print $1 }'))
 
 # Multi-disk setup
 if ((${#disks[*]} > 1)); then
-	READY_DEV=${MD_DEV}
+    READY_DEV=${MD_DEV}
 
-	# Check if raid exists and is present or assmeble, else create
-	if (mdadm --misc --examine ${disks[0]} | grep -oPq "(^\s+Name : )\K${VOLUME_NAME}$") && [ ! -b /dev/md/${VOLUME_NAME} ]; then
+    # Check if raid exists and is present or assmeble, else create
+    if (mdadm --misc --examine ${disks[0]} | grep -oPq "(^\s+Name : )\K${VOLUME_NAME}$") && [ ! -b /dev/md/${VOLUME_NAME} ]; then
         [[ -b /dev/md/${VOLUME_NAME}_0 ]] && mdadm --stop /dev/md/${VOLUME_NAME}_0
         updateMdConfig
-		mdadm --assemble --scan
+        mdadm --assemble --scan
 
-	else
-		mdadm --create --verbose ${MD_DEV} --level=0 --name=${VOLUME_NAME} --raid-devices=${#disks[*]} ${disks[*]}
-		mkfs -t ${FS_TYPE} -L ${VOLUME_NAME} ${MD_DEV}
+    else
+        mdadm --create --verbose ${MD_DEV} --level=0 --name=${VOLUME_NAME} --raid-devices=${#disks[*]} ${disks[*]}
+        mkfs -t ${FS_TYPE} -L ${VOLUME_NAME} ${MD_DEV}
         updateMdConfig
     fi
 
 # Single disk setup
 else
-	READY_DEV=${disks}
-	blkid "${READY_DEV}" | grep -q xfs || mkfs -t ${FS_TYPE} -L ${VOLUME_NAME} ${disks}
+    READY_DEV=${disks}
+    blkid "${READY_DEV}" | grep -q xfs || mkfs -t ${FS_TYPE} -L ${VOLUME_NAME} ${disks}
 
 fi
 
@@ -65,7 +65,7 @@ fi
 # Create directories in the volume and apply access
 IFS=,
 for d in ${POSTMOUNT_DIRS}; do
-	if [ ! -d "${MOUNTPOINT}"/"${d}" ]; then
+    if [ ! -d "${MOUNTPOINT}"/"${d}" ]; then
         mkdir "${MOUNTPOINT}"/"${d}"
         chown ${FS_OWNER} "${MOUNTPOINT}"/"${d}"
     fi
