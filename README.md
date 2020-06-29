@@ -23,7 +23,7 @@ You can configure your application's init script to depend on this via SystemD.
 
 |Key|Info|
 |:--|:---|
-|volume.name|Name for the file system label and device name if RAID (/dev/md/\<volume.name\>|
+|volume.name|Name for the file system label and device name if RAID (/dev/md/\<volume.name\>). Bear in mind the file system label limit (xfs: 12 chars)|
 |volume.mountpoint|Path to mount the volume (will be created if non-existent)|
 |volume.post_mount_mkdir|Directories to create in the volume after mounted|
 |volume.fs|File system to format the volume|
