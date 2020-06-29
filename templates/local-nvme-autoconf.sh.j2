@@ -22,7 +22,7 @@ MD_DEV=/dev/md/${VOLUME_NAME}
 
 function updateMdConfig(){
     UUID=$(mdadm --misc --examine ${disks[0]} | grep -oP "(^\s+Array UUID : )\K[a-z0-9:]{35}$")
-    echo "ARRAY ${MD_DEV} UUID=${UUID}" > /etc/mdadm.conf
+    echo "ARRAY ${READY_DEV} UUID=${UUID}" > /etc/mdadm.conf
 }
 
 
@@ -35,7 +35,7 @@ function updateMdConfig(){
 disks=($(nvme list | grep 'Instance Storage'| awk '{ print $1 }'))
 
 # Multi-disk setup
-if ((${\#disks[*]} > 1)); then
+if ((${{ '{#' }}disks[*]} > 1)); then
     READY_DEV=${MD_DEV}
 
     # Check if raid exists and is present or assmeble, else create
@@ -45,8 +45,8 @@ if ((${\#disks[*]} > 1)); then
         mdadm --assemble --scan
 
     elif [ ! -b ${READY_DEV} ]; then
-        mdadm --create --verbose ${MD_DEV} --level=0 --name=${VOLUME_NAME} --raid-devices=${\#disks[*]} ${disks[*]}
-        mkfs -t ${FS_TYPE} -L ${VOLUME_NAME} ${MD_DEV}
+        mdadm --create --verbose ${READY_DEV} --level=0 --name=${VOLUME_NAME} --raid-devices=${{ '{#' }}disks[*]} ${disks[*]}
+        mkfs -t ${FS_TYPE} -L ${VOLUME_NAME} ${READY_DEV}
         updateMdConfig
     fi
 
