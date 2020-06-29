@@ -1,0 +1,9 @@
+[Unit]
+Requires=-.mount
+
+[Service]
+Type=oneshot
+ExecStart=/opt/system-scripts/bin/local-nvme-autoconf.sh
+
+[Install]
+WantedBy=multi-user.target
