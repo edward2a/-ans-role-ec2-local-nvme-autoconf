@@ -35,7 +35,7 @@ function updateMdConfig(){
 disks=($(nvme list | grep 'Instance Storage'| awk '{ print $1 }'))
 
 # Multi-disk setup
-if ((${#disks[*]} > 1)); then
+if ((${\#disks[*]} > 1)); then
     READY_DEV=${MD_DEV}
 
     # Check if raid exists and is present or assmeble, else create
@@ -45,7 +45,7 @@ if ((${#disks[*]} > 1)); then
         mdadm --assemble --scan
 
     elif [ ! -b ${READY_DEV} ]; then
-        mdadm --create --verbose ${MD_DEV} --level=0 --name=${VOLUME_NAME} --raid-devices=${#disks[*]} ${disks[*]}
+        mdadm --create --verbose ${MD_DEV} --level=0 --name=${VOLUME_NAME} --raid-devices=${\#disks[*]} ${disks[*]}
         mkfs -t ${FS_TYPE} -L ${VOLUME_NAME} ${MD_DEV}
         updateMdConfig
     fi
