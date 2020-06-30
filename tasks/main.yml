@@ -1,9 +1,11 @@
 - name: Install dependencies
   yum:
+    name: "{{ packages }}"
     state: present
   vars:
     packages:
     - mdadm
+    - nvme-cli
 
 - name: Create directory path
   file:
